@@ -1,128 +1,48 @@
-import "./styles.css";
+import { StoreProvider, useStore } from "./core/store";
+import { PlayerProvider } from "./components/player";
+import { TopBar } from "./components/TopBar";
+import { Timeline } from "./components/Timeline";
+import { SiteMap } from "./components/SiteMap";
+import { Conflicts } from "./components/Conflicts";
+import { Segments } from "./components/Segments";
+import { ModelList } from "./components/ModelList";
+import { ShowSettings } from "./components/ShowSettings";
+import { Preview } from "./components/Preview";
+import { MergeDialog } from "./components/MergeDialog";
+import { PendingDialog } from "./components/PendingDialog";
 
-const project = {
-  "sourceNo": 10,
-  "id": "hxyfront-62008",
-  "port": 62008,
-  "title": "烟花燃放脚本编排",
-  "domain": "烟花燃放编排",
-  "prompt": "我想做一个面向烟花燃放编排师的燃放脚本前端工具，可以记录节目段落、烟花型号、口径、发射角度、点火时间、持续时间、安全距离和音乐时间点。页面需要有时间轴编排、燃放点位平面图、型号清单、冲突时间提示和整场节目预览。",
-  "palette": [
-    "#1d4ed8",
-    "#dc2626",
-    "#f59e0b"
-  ],
-  "metrics": [
-    "节目段落",
-    "点火节点",
-    "冲突提示",
-    "安全距离"
-  ],
-  "filters": [
-    "礼花弹",
-    "罗马烛光",
-    "扇形架",
-    "冷焰火"
-  ],
-  "fields": [
-    "节目段落",
-    "烟花型号",
-    "口径",
-    "发射角度",
-    "点火时间",
-    "安全距离"
-  ],
-  "records": [
-    [
-      "Intro",
-      "30mm扇形架",
-      "00:12.500",
-      "安全距离35m"
-    ],
-    [
-      "Chorus A",
-      "75mm礼花弹",
-      "01:08.200",
-      "与B点位间隔正常"
-    ],
-    [
-      "Finale",
-      "冷焰火",
-      "03:42.000",
-      "近景区待确认"
-    ]
-  ]
-};
-
-function App() {
+function Workspace() {
+  const store = useStore();
   return (
-    <main className="app">
-      <section className="hero">
-        <p>{project.id} · 源提示词{project.sourceNo} · Port {project.port}</p>
-        <h1>{project.title}</h1>
-        <span>{project.prompt}</span>
-      </section>
-
-      <section className="metrics">
-        {project.metrics.map((metric: string, index: number) => (
-          <article key={metric}>
-            <small>{metric}</small>
-            <strong>{[86, 14, 7, 32][index] ?? 12}</strong>
-          </article>
-        ))}
-      </section>
-
-      <section className="workspace">
-        <aside className="panel">
-          <h2>{project.domain}筛选</h2>
-          <div className="chips">
-            {project.filters.map((item: string) => (
-              <button key={item}>{item}</button>
-            ))}
-          </div>
-        </aside>
-
-        <section className="panel form-panel">
-          <div className="heading">
-            <div>
-              <p>专业字段</p>
-              <h2>新增记录</h2>
-            </div>
-            <button className="primary">保存草稿</button>
-          </div>
-          <div className="field-grid">
-            {project.fields.map((field: string) => (
-              <label key={field}>
-                <span>{field}</span>
-                <input placeholder={"填写" + field} />
-              </label>
-            ))}
-          </div>
-        </section>
-      </section>
-
-      <section className="panel">
-        <div className="heading">
-          <div>
-            <p>历史记录</p>
-            <h2>近期工作台</h2>
-          </div>
-          <button>导出摘要</button>
+    <PlayerProvider durationMs={store.doc.musicMs}>
+      <TopBar />
+      <main className="app">
+        <Timeline />
+        <div className="two-col">
+          <Conflicts />
+          <SiteMap />
         </div>
-        <div className="records">
-          {project.records.map((record: string[], index: number) => (
-            <article key={record.join("-")}>
-              <b>{String(index + 1).padStart(2, "0")}</b>
-              <div>
-                <h3>{record[0]}</h3>
-                <p>{record.slice(1).join(" · ")}</p>
-              </div>
-            </article>
-          ))}
+        <Segments />
+        <div className="two-col wide-left">
+          <ModelList />
+          <ShowSettings />
         </div>
-      </section>
-    </main>
+        <Preview />
+      </main>
+      <MergeDialog />
+      <PendingDialog />
+      <footer className="app-foot">
+        三方合并（base / 对方版本 / 本地版本）· 容量按 {`{SLOT_MS=100ms}`} 排队顺延 · 安全距离同时刻校验 · 断网 outbox 重放 — 演示流程：
+        先在页面上随便改几笔（自动标记未保存）→ 断网 → 再改几笔并「离线保存」→ 点「模拟乙删段」→ 恢复网络即可看到合并与接不上的段
+      </footer>
+    </PlayerProvider>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <StoreProvider>
+      <Workspace />
+    </StoreProvider>
+  );
+}
